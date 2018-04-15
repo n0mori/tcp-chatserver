@@ -6,9 +6,11 @@ import (
 	"io"
 	"net"
 	"os"
+	"time"
 )
 
 var connections []*net.TCPConn
+var log *os.File
 
 func accepter(server *net.TCPListener) {
 	for {
@@ -51,11 +53,15 @@ func broadcaster(str string) {
 			writer.Flush()
 		}
 	}
+	log.WriteString(str)
 }
 
 func main() {
 	addr, err := net.ResolveTCPAddr("tcp", ":2000")
 	server, err := net.ListenTCP("tcp", addr)
+
+	now := time.Now()
+	log, err = os.OpenFile(now.String(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 
 	connections = make([]*net.TCPConn, 100)
 
@@ -65,5 +71,7 @@ func main() {
 	}
 
 	accepter(server)
+
+	defer log.Close()
 
 }
